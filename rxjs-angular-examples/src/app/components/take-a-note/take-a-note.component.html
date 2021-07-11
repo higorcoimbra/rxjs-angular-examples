@@ -1,0 +1,6 @@
+<form [formGroup]="form" class="container">
+  <div>Take a note!</div>
+  <textarea id="note-input" formControlName="note"></textarea>
+  <div class="save-indicator">{{saveIndicator}}</div>
+</form>
+<div>Saves in progress: {{savesInProgress}}</div>
