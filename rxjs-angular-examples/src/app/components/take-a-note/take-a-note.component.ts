@@ -49,6 +49,7 @@ export class TakeANoteComponent implements OnInit {
   }
 
   whenSavesCompleted() {
+    // mapeia qualquer entrada de usuário para a mensagem 'Saving'
     this.savesInProgress$ = this.inputToSave$.pipe(
       mapTo(of('Saving')),
       tap((_) => this.savesInProgress++)
@@ -56,7 +57,9 @@ export class TakeANoteComponent implements OnInit {
   }
 
   whenSaveInProgress() {
+    // mapeia qualquer entrada de usuário para a mensagem 'Saved!' e depois 'Last updated:...'
     this.savesCompleted$ = this.inputToSave$.pipe(
+      // mapeia cada entrada de usuário para outro Observable, depois "achata" (flattens) todos com o mergeAll
       mergeMap(this.saveChanges),
       tap((_) => this.savesInProgress--),
       // ignora se ainda tiver salvamentos em progresso
@@ -82,9 +85,7 @@ export class TakeANoteComponent implements OnInit {
     const noteValueChanges$ = this.controls.note.valueChanges;
     this.inputToSave$ = noteValueChanges$.pipe(
       debounceTime(200),
-      filter(value => {
-        return typeof(value) === 'string'
-      }),
+      filter(value => typeof(value) === 'string'),
       distinctUntilChanged(),
       // hot stream: um produtor para vários consumidores
       share()
