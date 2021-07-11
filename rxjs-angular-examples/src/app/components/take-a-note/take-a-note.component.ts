@@ -59,30 +59,39 @@ export class TakeANoteComponent implements OnInit {
     this.savesCompleted$ = this.inputToSave$.pipe(
       mergeMap(this.saveChanges),
       tap((_) => this.savesInProgress--),
+      // ignora se ainda tiver salvamentos em progresso
       filter((_) => !this.savesInProgress),
       mapTo(
+        // emite cada observable abaixo e espera cada um completar para passar
         concat(
           of('Saved!'),
+          // mostra a mensagem de "Saved!" por 2 segundos
           EMPTY.pipe(delay(2000)),
+          // usa o defer para que o Last updated tenha o tempo correto, será fabricado no instante da inscrição
           defer(() => of(`Last updated: ${new Date().toLocaleString('pt-br').toString()}`))
         )
       )
     );
   }
 
+  /**
+   * Dispara um salvamento quando o usuário para de digitar por 200ms
+   * Faz o broadcast da mensagem para os Observers que cuidam da mensagem de salvamento
+  */
   configureUserInput() {
     const noteValueChanges$ = this.controls.note.valueChanges;
     this.inputToSave$ = noteValueChanges$.pipe(
       debounceTime(200),
       filter(value => {
-        debugger;
         return typeof(value) === 'string'
       }),
       distinctUntilChanged(),
+      // hot stream: um produtor para vários consumidores
       share()
     );
   }
 
+  // simula uma chamada de api com um deplay de 1.5s
   saveChanges(value: string) {
     return of(value).pipe(delay(1500));
   };
@@ -90,6 +99,9 @@ export class TakeANoteComponent implements OnInit {
   setUpdateMethodForSaveIndicator() {
     merge(this.savesInProgress$, this.savesCompleted$)
       .pipe(
+        /*
+          Se um novo salvamento vier quando o Observable de completar está rodando, queremos trocar para o estado de atualização do texto.
+        */
         switchAll()
       )
       .subscribe((status) => {
