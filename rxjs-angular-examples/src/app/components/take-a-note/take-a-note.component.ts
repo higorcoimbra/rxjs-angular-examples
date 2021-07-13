@@ -51,6 +51,7 @@ export class TakeANoteComponent implements OnInit {
   configureUserInput() {
     const noteValueChanges$ = this.controls.note.valueChanges;
     this.inputToSave$ = noteValueChanges$.pipe(
+      // emite o valor mais recente após 200ms
       debounceTime(200),
       filter(value => typeof(value) === 'string'),
       distinctUntilChanged(),
@@ -112,6 +113,7 @@ export class TakeANoteComponent implements OnInit {
         */
         switchAll()
       )
+      // três valores possíveis; "Saving", "Saved!", "Last updated"
       .subscribe((status) => {
         this.saveIndicator = status;
       });
