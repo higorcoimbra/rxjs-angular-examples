@@ -55,7 +55,6 @@ export class TakeANoteComponent implements OnInit {
       filter(value => typeof(value) === 'string'),
       distinctUntilChanged(),
       // hot stream: um produtor para vários consumidores
-      // testar tirar o share()
       share()
     );
   }
@@ -63,7 +62,11 @@ export class TakeANoteComponent implements OnInit {
   whenSaveCompleted() {
     // mapeia qualquer entrada de usuário para a mensagem 'Saved!' e depois 'Last updated:...'
     this.savesCompleted$ = this.inputToSave$.pipe(
-      // mapeia cada entrada de usuário para outro Observable, depois "achata" (flattens) todos com o mergeAll
+      /*
+        * mapeia cada entrada de usuário para o Observable da "chamada de API"
+        * "achata" (flattens) todos os Observables gerados com o mergeAll
+        * emite o resultado do mergeAll 
+      */
       mergeMap(this.saveChanges),
       tap((_) => this.savesInProgress--),
       // ignora se ainda tiver salvamentos em progresso
@@ -74,7 +77,7 @@ export class TakeANoteComponent implements OnInit {
           of('Saved!'),
           // mostra a mensagem de "Saved!" por 2 segundos
           EMPTY.pipe(delay(2000)),
-          // usa o defer para que o Last updated tenha o tempo correto, será fabricado no instante da inscrição
+          // usa o defer para que o Last updated tenha o tempo correto, será fabricado NO INSTANTE DA INSCRIÇÃO
           // testar tirando o defer
           defer(() => of(`Last updated: ${new Date().toLocaleString('pt-br').toString()}`))
         )
