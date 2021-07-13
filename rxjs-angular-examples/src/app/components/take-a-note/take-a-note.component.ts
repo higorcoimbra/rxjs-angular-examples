@@ -38,8 +38,8 @@ export class TakeANoteComponent implements OnInit {
   ngOnInit(): void {
     this.setInitialVariables();
     this.configureUserInput();
-    this.whenSaveInProgress();
-    this.whenSavesCompleted();
+    this.whenSaveCompleted();
+    this.whenSavesInProgress();
     this.setUpdateMethodForSaveIndicator();
   }
   
@@ -60,7 +60,7 @@ export class TakeANoteComponent implements OnInit {
     );
   }
 
-  whenSaveInProgress() {
+  whenSaveCompleted() {
     // mapeia qualquer entrada de usuário para a mensagem 'Saved!' e depois 'Last updated:...'
     this.savesCompleted$ = this.inputToSave$.pipe(
       // mapeia cada entrada de usuário para outro Observable, depois "achata" (flattens) todos com o mergeAll
@@ -82,7 +82,7 @@ export class TakeANoteComponent implements OnInit {
     );
   }
 
-  whenSavesCompleted() {
+  whenSavesInProgress() {
     // mapeia qualquer entrada de usuário para a mensagem 'Saving'
     this.savesInProgress$ = this.inputToSave$.pipe(
       mapTo(of('Saving')),
