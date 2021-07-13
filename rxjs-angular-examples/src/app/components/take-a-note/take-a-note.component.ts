@@ -42,17 +42,21 @@ export class TakeANoteComponent implements OnInit {
     this.whenSavesCompleted();
     this.setUpdateMethodForSaveIndicator();
   }
-
+  
   setInitialVariables() {
     this.savesInProgress = 0;
     this.saveIndicator = 'All changes saved';
   }
 
-  whenSavesCompleted() {
-    // mapeia qualquer entrada de usuário para a mensagem 'Saving'
-    this.savesInProgress$ = this.inputToSave$.pipe(
-      mapTo(of('Saving')),
-      tap((_) => this.savesInProgress++)
+  configureUserInput() {
+    const noteValueChanges$ = this.controls.note.valueChanges;
+    this.inputToSave$ = noteValueChanges$.pipe(
+      debounceTime(200),
+      filter(value => typeof(value) === 'string'),
+      distinctUntilChanged(),
+      // hot stream: um produtor para vários consumidores
+      // testar tirar o share()
+      share()
     );
   }
 
@@ -71,9 +75,18 @@ export class TakeANoteComponent implements OnInit {
           // mostra a mensagem de "Saved!" por 2 segundos
           EMPTY.pipe(delay(2000)),
           // usa o defer para que o Last updated tenha o tempo correto, será fabricado no instante da inscrição
+          // testar tirando o defer
           defer(() => of(`Last updated: ${new Date().toLocaleString('pt-br').toString()}`))
         )
       )
+    );
+  }
+
+  whenSavesCompleted() {
+    // mapeia qualquer entrada de usuário para a mensagem 'Saving'
+    this.savesInProgress$ = this.inputToSave$.pipe(
+      mapTo(of('Saving')),
+      tap((_) => this.savesInProgress++)
     );
   }
 
@@ -81,16 +94,6 @@ export class TakeANoteComponent implements OnInit {
    * Dispara um salvamento quando o usuário para de digitar por 200ms
    * Faz o broadcast da mensagem para os Observers que cuidam da mensagem de salvamento
   */
-  configureUserInput() {
-    const noteValueChanges$ = this.controls.note.valueChanges;
-    this.inputToSave$ = noteValueChanges$.pipe(
-      debounceTime(200),
-      filter(value => typeof(value) === 'string'),
-      distinctUntilChanged(),
-      // hot stream: um produtor para vários consumidores
-      share()
-    );
-  }
 
   // simula uma chamada de api com um deplay de 1.5s
   saveChanges(value: string) {
@@ -98,6 +101,7 @@ export class TakeANoteComponent implements OnInit {
   };
 
   setUpdateMethodForSaveIndicator() {
+    // emite de forma concorrente os valores dos dois Observables
     merge(this.savesInProgress$, this.savesCompleted$)
       .pipe(
         /*
